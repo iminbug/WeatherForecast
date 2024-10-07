@@ -1,0 +1,56 @@
+# Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+# Set minimum iOS version
+platform :ios, '15.0'
+prepare_react_native_project!
+
+# Check if Flipper is enabled
+flipper_config = ENV['NO_FLIPPER'] == "1" ? FlipperConfiguration.disabled : FlipperConfiguration.enabled
+
+# Determine if using frameworks
+linkage = ENV['USE_FRAMEWORKS']
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
+end
+
+target 'App_Weather' do
+  config = use_native_modules!
+
+  # Specify pod versions
+  #  pod 'lottie-ios'
+  # Ensure this matches your lottie-react-native dependency
+  # Add any other necessary pods below
+  # Example: pod 'YourOtherDependency'
+
+  # Flags change depending on the env values
+  flags = get_default_flags()
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :hermes_enabled => flags[:hermes_enabled],  # Hermes enabled by default
+    :fabric_enabled => flags[:fabric_enabled],   # Fabric enabled if needed
+    :flipper_configuration => flipper_config,    # Flipper configuration
+    :app_path => "#{Pod::Config.instance.installation_root}/.." # Absolute path to the app root
+  )
+
+  target 'App_WeatherTests' do
+    inherit! :complete
+    # Pods for testing
+    # Add any test-specific pods here
+  end
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false # Adjust if needed for Mac Catalyst
+    )
+    __apply_Xcode_12_5_M1_post_install_workaround(installer) # Workaround for Xcode
+  end
+end
