@@ -1,4 +1,3 @@
-// src/redux/actions/weatherActions.js
 import { fetchWeatherForecast as apiFetchWeatherForecast, fetchLocations as apiFetchLocations } from '../../api/weather';
 
 export const fetchWeatherForecast = (params: { cityName: any; days: any; }) => {

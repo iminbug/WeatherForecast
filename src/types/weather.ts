@@ -1,4 +1,3 @@
-// src/types/weather.ts
 export interface WeatherForecastResponse {
     current: {
       temp: number;
