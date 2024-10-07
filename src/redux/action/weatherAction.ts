@@ -1,8 +1,7 @@
-// src/redux/actions/weatherActions.js
 import { fetchWeatherForecast as apiFetchWeatherForecast, fetchLocations as apiFetchLocations } from '../../api/weather';
 
 export const fetchWeatherForecast = (params: { cityName: any; days: any; }) => {
-  return async (dispatch) => {
+  return async (dispatch: (arg0: { type: string; error?: any; payload?: object; }) => void) => {
     dispatch({ type: 'FETCH_WEATHER_REQUEST' });
     const data = await apiFetchWeatherForecast(params);
     
@@ -14,8 +13,8 @@ export const fetchWeatherForecast = (params: { cityName: any; days: any; }) => {
   };
 };
 
-export const fetchLocations = (params) => {
-  return async (dispatch) => {
+export const fetchLocations = (params: { cityName: any; }) => {
+  return async (dispatch: (arg0: { type: string; error?: any; payload?: object; }) => void) => {
     dispatch({ type: 'FETCH_LOCATIONS_REQUEST' });
     const data = await apiFetchLocations(params);
     

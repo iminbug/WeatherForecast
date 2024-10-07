@@ -10,7 +10,7 @@ const WeatherDetailScreen = ({ route, navigation }) => {
 
   return (
     <ImageBackground
-      source={require('../assets/images/bg1.png')} // Background image
+      source={require('../assets/images/bg1.png')} 
       style={styles.background}
     >
       <LinearGradient colors={['rgba(0, 0, 0, 0.3)', 'transparent']} style={styles.gradientOverlay} />
@@ -21,14 +21,14 @@ const WeatherDetailScreen = ({ route, navigation }) => {
           style={styles.weatherIcon}
         />
 
-        {/* Temperature Box */}
+       
         <View style={styles.box}>
           <Text style={styles.tempText}>
             Avg Temp: {forecastItem.day.avgtemp_c}&#176;
           </Text>
         </View>
 
-        {/* Condition Box */}
+
         <View style={styles.box}>
           <Text style={styles.conditionText}>
             Condition: {forecastItem.day.condition.text}
@@ -62,7 +62,7 @@ const WeatherDetailScreen = ({ route, navigation }) => {
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Sunrise</Text>
             <LottieView
-              source={require('../assets/animations/sunrise.json')} // path to your Lottie file
+              source={require('../assets/animations/sunrise.json')} 
               autoPlay
               speed={0.5}  
               loop
@@ -73,7 +73,7 @@ const WeatherDetailScreen = ({ route, navigation }) => {
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Sunset</Text>
             <LottieView
-              source={require('../assets/animations/sunset.json')} // path to your Lottie file
+              source={require('../assets/animations/sunset.json')} 
               autoPlay
               speed={0.5}  
               loop
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     padding: 30,
     width: '90%',
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', // Semi-transparent black background
+    backgroundColor: 'rgba(0, 0, 0, 0.4)', 
   },
   dayName: {
     fontSize: 30,
@@ -126,21 +126,21 @@ const styles = StyleSheet.create({
   },
   tempText: {
     fontSize: 22,
-    color: '#fff', // White for better contrast
+    color: '#fff', 
     marginVertical: 5,
     textAlign: 'center'
   },
   conditionText: {
     fontSize: 30,
-    color: '#fff', // White for better contrast
+    color: '#fff', 
     marginVertical: 5,
     textAlign: 'center'
   },
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // Distribute space evenly
+    justifyContent: 'space-between', 
     width: '100%',
-    flexWrap: 'wrap', // Allow wrapping to a new line if needed
+    flexWrap: 'wrap', 
     marginTop: 20,
   },
   box: {
