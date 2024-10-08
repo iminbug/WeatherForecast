@@ -1,4 +1,3 @@
-// src/api/weatherApi.js
 import axios from 'axios';
 import { apiKey } from '../constants';
 
@@ -44,7 +43,7 @@ const apiCall = async (endpoint: string): Promise<object> => {
  * @param {Object} params - Parameters for the request.
  * @returns {Promise<Object>} The weather forecast data.
  */
-export const fetchWeatherForecast = async (params: { cityName: any; days: any; }) => {
+export const fetchWeatherForecast = async (params: { cityName: any; days: any; }): Promise<object> => {
   const forecastUrl = generateForecastUrl(params);
   return apiCall(forecastUrl);
 };
@@ -54,7 +53,7 @@ export const fetchWeatherForecast = async (params: { cityName: any; days: any; }
  * @param {Object} params - Parameters for the request.
  * @returns {Promise<Object>} The locations data.
  */
-export const fetchLocations = async (params: { cityName: any; }) => {
+export const fetchLocations = async (params: { cityName: any; }): Promise<object> => {
   const locationsUrl = generateLocationsUrl(params);
   return apiCall(locationsUrl);
 };

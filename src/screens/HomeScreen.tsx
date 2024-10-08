@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react-native/no-inline-styles */
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
@@ -14,6 +12,7 @@ import {
   Platform,
   FlatList,
 } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { MagnifyingGlassIcon, XMarkIcon } from 'react-native-heroicons/outline';
 import { CalendarDaysIcon, MapPinIcon } from 'react-native-heroicons/solid';
 import { debounce } from 'lodash';
@@ -22,11 +21,10 @@ import { createSelector } from 'reselect';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLocations, fetchWeatherForecast } from '../redux/action/weatherAction';
 import * as Progress from 'react-native-progress';
-import MyComponent from './StatusBar';
 import { weatherImages } from '../constants';
 import { getData, storeData } from '../utils/asyncStorage';
 import { useNavigation } from '@react-navigation/native';
-import LottieView from 'lottie-react-native';
+
 
 
 
@@ -44,7 +42,8 @@ const selectWeatherData = createSelector(
 
 const HomeScreen = () => {
   const [showSearch, toggleSearch] = useState(false);
-  const dispatch = useDispatch();
+  const [searchText, setSearchText] = useState(''); 
+  const dispatch = useDispatch<any>();
   const navigation = useNavigation()
   const { loading, weather, locations = [], error } = useSelector(selectWeatherData);
   console.log({ loading, weather, locations, error });
@@ -58,10 +57,10 @@ const HomeScreen = () => {
   const fetchMyWeatherData = async () => {
     let myCity = await getData('city');
     let cityName = myCity || 'Delhi';
-    dispatch(fetchWeatherForecast({ cityName, days: '7' }));
+    dispatch(fetchWeatherForecast({ cityName, days: 7 }));
   };
 
-  const handleSearch = (search) => {
+  const handleSearch = (search: string | any[]) => {
     if (search && search.length > 2) {
       dispatch(fetchLocations({ cityName: search }));
     }
@@ -74,7 +73,18 @@ const HomeScreen = () => {
   };
 
   // Debounce the search function to avoid too many requests
-  const handleTextDebounce = useCallback(debounce(handleSearch, 1200), []);
+  const handleTextDebounce = useCallback(
+    debounce((text) => {
+      handleSearch(text);
+    }, 1200),
+    []
+  );
+
+  useEffect(() => {
+    if (!showSearch) {
+      setSearchText(''); 
+    }
+  }, [showSearch]);
 
   const { location, current } = weather || {};
 
@@ -85,7 +95,6 @@ const HomeScreen = () => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -150}
     >
       <View style={styles.container}>
-        {/* <MyComponent style="light" /> */}
         <Image
           blurRadius={2}
           source={require('../assets/images/bg1.png')}

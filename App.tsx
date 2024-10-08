@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import store from './src/redux/store'; 
 import HomeScreen from './src/screens/HomeScreen';
-import WeatherDetailScreen from './src/screens/DetailsScreen';// Ensure this path is correct
+import WeatherDetailScreen from './src/screens/DetailsScreen';
 import SplashScreen from 'react-native-splash-screen';
 
 const Stack = createNativeStackNavigator();

@@ -40,7 +40,7 @@ const WeatherDetailScreen = ({ route, navigation }) => {
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Humidity</Text>
             <LottieView
-              source={require('../assets/animations/humidity.json')} // path to your Lottie file
+              source={require('../assets/animations/humidity.json')} 
               autoPlay
               loop
               speed={0.5}  
@@ -51,7 +51,7 @@ const WeatherDetailScreen = ({ route, navigation }) => {
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Wind</Text>
             <LottieView
-              source={require('../assets/animations/wind.json')} // path to your Lottie file
+              source={require('../assets/animations/wind.json')} 
               autoPlay
               speed={0.5}  
               loop
@@ -82,8 +82,6 @@ const WeatherDetailScreen = ({ route, navigation }) => {
             <Text style={styles.statValue}>{forecastItem.astro.sunset}</Text>
           </View>
         </View>
-
-        {/* Styled Back Button */}
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
