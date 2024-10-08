@@ -5,7 +5,6 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   SafeAreaView,
   StyleSheet,
   KeyboardAvoidingView,
@@ -466,6 +465,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
+  errorContainer:{
+    width: 'auto',
+  height:'auto'
+  },
+  errorText:{
+    color:'red'
+  }
 });
 
 export default HomeScreen;
