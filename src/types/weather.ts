@@ -1,4 +1,3 @@
-
 export interface WeatherForecastResponse {
     current: {
       temp: number;
