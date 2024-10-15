@@ -10,6 +10,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   FlatList,
+  Dimensions,
+  StatusBar,
+  ImageBackground,
 } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { MagnifyingGlassIcon, XMarkIcon } from 'react-native-heroicons/outline';
@@ -20,10 +23,11 @@ import { createSelector } from 'reselect';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLocations, fetchWeatherForecast } from '../redux/action/weatherAction';
 import * as Progress from 'react-native-progress';
-import { weatherImages } from '../constants';
 import { getData, storeData } from '../utils/asyncStorage';
 import { useNavigation } from '@react-navigation/native';
-
+import LinearGradient from 'react-native-linear-gradient';
+import { weatherImages } from '../constants';
+import { AppDispatch } from '../redux/store';
 
 
 
@@ -31,7 +35,7 @@ const selectWeatherState = (state: { weather: any; }) => state.weather;
 
 const selectWeatherData = createSelector(
   [selectWeatherState],
-  weather => ({
+  (weather) => ({
     loading: weather.loading,
     weather: weather.current,
     locations: weather.locations,
@@ -39,18 +43,17 @@ const selectWeatherData = createSelector(
   })
 );
 
+const { width, height } = Dimensions.get('window');
+
 const HomeScreen = () => {
-  const [showSearch, toggleSearch] = useState(false);
-  const [searchText, setSearchText] = useState(''); 
-  const dispatch = useDispatch<any>();
-  const navigation = useNavigation()
+  const [showSearch, toggleSearch] = useState<any>(false);
+  const [searchText, setSearchText] = useState('');
+  const dispatch = useDispatch<AppDispatch>();
+  const navigation = useNavigation<any>();
   const { loading, weather, locations = [], error } = useSelector(selectWeatherData);
-  console.log({ loading, weather, locations, error });
 
   useEffect(() => {
     fetchMyWeatherData();
-  
-    
   }, []);
 
   const fetchMyWeatherData = async () => {
@@ -62,6 +65,8 @@ const HomeScreen = () => {
   const handleSearch = (search: string | any[]) => {
     if (search && search.length > 2) {
       dispatch(fetchLocations({ cityName: search }));
+    } else {
+      dispatch(fetchLocations([]));
     }
   };
 
@@ -69,9 +74,9 @@ const HomeScreen = () => {
     toggleSearch(false);
     dispatch(fetchWeatherForecast({ cityName: loc.name, days: '7' }));
     storeData('city', loc.name);
+    dispatch(fetchLocations([]));
   };
 
-  // Debounce the search function to avoid too many requests
   const handleTextDebounce = useCallback(
     debounce((text) => {
       handleSearch(text);
@@ -81,198 +86,187 @@ const HomeScreen = () => {
 
   useEffect(() => {
     if (!showSearch) {
-      setSearchText(''); 
+      setSearchText('');
     }
   }, [showSearch]);
 
   const { location, current } = weather || {};
 
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -150}
-    >
-      <View style={styles.container}>
+  const renderItem = ({ item }: any) => {
+    const date = new Date(item.date);
+    const options = { weekday: 'long' };
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' }).split(',')[0];
+
+    return (
+      <TouchableOpacity
+        onPress={() => navigation.navigate('WeatherDetail', { forecastItem: item })}
+        style={styles.forecastDailyItem}
+      >
         <Image
-          blurRadius={2}
-          source={require('../assets/images/bg1.png')}
-          style={styles.backgroundImage}
+          source={weatherImages[item?.day?.condition?.text || 'other']}
+          style={styles.forecastDailyIcon}
         />
+        <Text style={styles.forecastDailyDayName}>{dayName}</Text>
+        <Text style={styles.forecastDailyTemp}>{item?.day?.temp_c}&#176;</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderFooter = () => (
+    <View style={styles.forecastDailyContainer}>
+      <View style={styles.forecastDailyHeader}>
+        <CalendarDaysIcon size={30} color="white" />
+        <Text style={styles.forecastDailyHeaderText}>Daily forecast</Text>
+      </View>
+      <FlatList
+        data={weather?.forecast?.forecastday}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index.toString()}
+        horizontal={false}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      />
+    </View>
+  );
+
+  const renderHeader = () => (
+    <>
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          {showSearch && (
+            <TextInput
+              onChangeText={handleTextDebounce}
+              placeholder="Search City"
+              placeholderTextColor={'lightgray'}
+              style={styles.searchInput}
+            />
+          )}
+          <TouchableOpacity
+            onPress={() => toggleSearch(!showSearch)}
+            style={styles.searchButton}
+          >
+            {showSearch ? (
+              <XMarkIcon size={30} color="white" />
+            ) : (
+              <MagnifyingGlassIcon size={30} color="white" />
+            )}
+          </TouchableOpacity>
+        </View>
+        {locations.length > 0 && showSearch && (
+          <View style={styles.locationList}>
+            {locations.map((loc: { name: string; country: string }, index: number) => (
+              <TouchableOpacity
+                key={index?.toString()}
+                onPress={() => handleLocation(loc)}
+                style={[
+                  styles.locationListItem,
+                  index + 1 !== locations.length && styles.locationListItemWithBorder,
+                ]}
+              >
+                <MapPinIcon size="20" color="gray" />
+                <Text style={styles.locationListItemText}>
+                  {loc?.name}, {loc?.country}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+
+      <View style={styles.forecastContainer}>
         {loading ? (
           <View style={styles.loadingContainer}>
             <Progress.CircleSnail thickness={10} size={140} color="#0bb3b2" />
           </View>
         ) : (
-          <SafeAreaView style={styles.safeArea}>
-            <View style={styles.searchContainer}>
-              <View
-                style={[
-                  styles.searchInputContainer,
-                  {
-                    backgroundColor: showSearch
-                      ? theme.bgWhite(0.3)
-                      : 'transparent',
-                  },
-                ]}
-              >
-                {showSearch && (
-                  <TextInput
-                    onChangeText={handleTextDebounce}
-                    placeholder="Search City"
-                    placeholderTextColor={'lightgray'}
-                    style={styles.searchInput}
-                  />
-                )}
-                <TouchableOpacity
-                  onPress={() => toggleSearch(!showSearch)}
-                  style={[
-                    styles.searchButton,
-                    {
-                      backgroundColor: theme.bgWhite(0.4),
-                    },
-                  ]}
-                >
-                  {showSearch ? (
-                    <XMarkIcon size={30} color="white" />
-                  ) : (
-                    <MagnifyingGlassIcon size={30} color="white" />
-                  )}
-                </TouchableOpacity>
-              </View>
-              {locations.length > 0 && showSearch && (
-                <View style={styles.locationList}>
-                  {locations.map((loc: { name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; country: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }, index: React.Key | null | undefined) => (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => handleLocation(loc)}
-                      style={[
-                        styles.locationListItem,
-                        index + 1 !== locations.length && styles.locationListItemWithBorder,
-                      ]}
-                    >
-                      <MapPinIcon size="20" color="gray" />
-                      <Text style={styles.locationListItemText}>
-                        {loc?.name}, {loc?.country}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
+          <>
+            <View style={styles.forecastLocationContainer}>
+              <Text style={styles.forecastLocationText}>
+                {location?.name}, {location?.region}
+              </Text>
             </View>
 
-            {error && (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            )}
-
-            <View style={styles.forecastContainer}>
-              <View style={styles.forecastLocationContainer}>
-                <Text style={styles.forecastLocationText}>
-                  {location?.name}, {location?.region}
-                </Text>
-              </View>
-
-              <View style={styles.forecastWeatherIconContainer}>
-                <Image
-                  source={weatherImages[current?.condition?.text || 'other']}
-                  style={styles.forecastWeatherIcon}
-                />
-              </View>
-
-              <View style={styles.forecastDegreeContainer}>
-                <Text style={styles.forecastDegreeText}>
-                  {current?.temp_c}&#176;
-                </Text>
-                <Text style={styles.forecastConditionText}>
-                  {current?.condition?.text}
-                </Text>
-              </View>
-
-              <View style={styles.forecastStatsContainer}>
-                <View style={styles.forecastStatItem}>
-                  <LottieView
-                    source={require('../assets/animations/wind.json')}
-                    style={styles.forecastStatIcon}
-                    autoPlay
-                    loop
-                    speed={0.5}
-                  />
-                  <Text style={styles.forecastStatText}>
-                    {current?.wind_kph} km
-                  </Text>
-                </View>
-                <View style={styles.forecastStatItem}>
-                  <LottieView
-                    source={require('../assets/animations/humidity.json')}
-                    style={styles.forecastStatIcon}
-                    autoPlay
-                    loop
-                  />
-                  <Text style={styles.forecastStatText}>
-                    {current?.humidity}%
-                  </Text>
-                </View>
-                <View style={styles.forecastStatItem}>
-                  <LottieView
-                    source={require('../assets/animations/sunrise.json')}
-                    style={styles.forecastStatIcon}
-                    autoPlay
-                    loop
-                  />
-                  <Text style={styles.forecastStatText}>
-                    {weather?.forecast?.forecastday[0]?.astro?.sunrise}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.forecastDailyContainer}>
-              <View style={styles.forecastDailyHeader}>
-                <CalendarDaysIcon size={22} color="white" />
-                <Text style={styles.forecastDailyHeaderText}>
-                  Daily forecast
-                </Text>
-              </View>
-
-              <FlatList
-                data={weather?.forecast?.forecastday}
-                renderItem={({ item }) => {
-                  const date = new Date(item.date);
-                  const options = { weekday: 'long' };
-                  const dayName = date.toLocaleDateString('en-US', options).split(',')[0];
-
-                  return (
-                    <TouchableOpacity
-                      onPress={() => navigation.navigate('WeatherDetail', { forecastItem: item })}
-                      style={[
-                        styles.forecastDailyItem,
-                        { backgroundColor: theme.bgWhite(0.15) },
-                      ]}
-                    >
-                      <Image
-                        source={weatherImages[item?.day?.condition?.text || 'other']}
-                        style={styles.forecastDailyIcon}
-                      />
-                      <Text style={styles.forecastDailyDayName}>{dayName}</Text>
-                      <Text style={styles.forecastDailyTemp}>
-                        {item?.day?.avgtemp_c}&#176;
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }}
-                keyExtractor={(item, index) => index.toString()}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.forecastDailyScrollView}
+            <View style={styles.forecastWeatherIconContainer}>
+              <Image
+                source={weatherImages[current?.condition?.text || 'other']}
+                style={styles.forecastWeatherIcon}
               />
             </View>
 
-          </SafeAreaView>
+            <View style={styles.forecastDegreeContainer}>
+              <Text style={styles.forecastDegreeText}>{current?.temp_c}&#176;</Text>
+              <Text style={styles.forecastConditionText}>{current?.condition?.text}</Text>
+            </View>
+
+            <View style={styles.forecastStatsContainer}>
+              <View style={styles.forecastStatItem}>
+                <LottieView
+                  source={require('../assets/animations/wind.json')}
+                  style={styles.forecastStatIcon}
+                  autoPlay
+                  loop
+                  speed={0.5}
+                />
+                <Text style={styles.forecastStatText}>{current?.wind_kph} km</Text>
+              </View>
+              <View style={styles.forecastStatItem}>
+                <LottieView
+                  source={require('../assets/animations/humidity.json')}
+                  style={styles.forecastStatIcon}
+                  autoPlay
+                  loop
+                />
+                <Text style={styles.forecastStatText}>{current?.humidity}%</Text>
+              </View>
+              <View style={styles.forecastStatItem}>
+                <LottieView
+                  source={require('../assets/animations/sunrise.json')}
+                  style={styles.forecastStatIcon}
+                  autoPlay
+                  loop
+                />
+                <Text style={styles.forecastStatText}>
+                  {weather?.forecast?.forecastday[0]?.astro?.sunrise}
+                </Text>
+              </View>
+            </View>
+          </>
         )}
       </View>
+    </>
+  );
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <StatusBar barStyle="light-content" />
+      <ImageBackground
+        source={require('../assets/images/bg1.png')}
+        style={styles.background}
+        resizeMode="cover"
+      >
+        <LinearGradient colors={['rgba(0, 0, 0, 0.3)', 'transparent']} style={styles.gradientOverlay} />
+        <SafeAreaView style={styles.safeArea}>
+          <FlatList
+            data={current||[]}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => index.toString()}
+            ListHeaderComponent={renderHeader}
+            ListFooterComponent={renderFooter}
+            horizontal={false}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          />
+        </SafeAreaView>
+      </ImageBackground>
     </KeyboardAvoidingView>
   );
 };
@@ -280,198 +274,176 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    position: 'relative',
   },
-  backgroundImage: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
+  background: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
-    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   safeArea: {
     flex: 1,
+    paddingHorizontal: 20,
   },
   searchContainer: {
-    height: '10%',
-    marginHorizontal: 20,
-    zIndex: 50,
-    top: 20,
+    marginTop: 20,
   },
   searchInputContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    borderRadius: 999,
-    backgroundColor: 'transparent',
+    alignSelf: 'center',
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: theme.bgWhite(0.1),
+    elevation: 5,
+    width: '90%'
   },
   searchInput: {
     flex: 1,
-    paddingLeft: 16,
-    height: 30,
-    paddingBottom: 1,
-    fontSize: 20,
+    padding: 10,
+    fontSize: 16,
     color: 'white',
   },
   searchButton: {
-    borderRadius: 999,
     padding: 10,
-    margin: 5,
-    backgroundColor: 'transparent',
   },
   locationList: {
-    width: '100%',
-    marginTop: 10,
+    marginTop: 5,
+    maxHeight: 150,
+    backgroundColor: theme.bgWhite(0.2),
+    borderRadius: 10,
+    elevation: 5,
+    zIndex: 10,
+    width: '90%',
+    alignSelf: 'center',
   },
   locationListItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: '#f0f0f0',
-    borderBottomColor: '#ccc',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-  },
-  locationListItemText: {
-    color: '#333',
-    fontSize: 18,
-    marginLeft: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'lightgray',
   },
   locationListItemWithBorder: {
-    borderBottomWidth: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: 'lightgray',
+  },
+  locationListItemText: {
+    marginLeft: 10,
+    color: 'white',
+  },
+  errorContainer: {
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  errorText: {
+    color: 'red',
+    fontWeight: 'bold',
   },
   forecastContainer: {
-    marginHorizontal: 20,
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    margin: 10,
+    paddingVertical: 15,
+    borderRadius: 10,
+    width: '95%'
+  },
+  forecastLocationContainer: {
+    marginBottom: 10,
+
   },
   forecastLocationText: {
+    fontSize: 20,
     color: 'white',
-    fontSize: 22,
-    textAlign: 'center',
-    fontWeight: 'bold', //
-  },
-  forecastCountryText: {
-    color: 'gray',
-    fontSize: 17,
     fontWeight: 'bold',
   },
   forecastWeatherIconContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    top: 10,
+    marginBottom: 10,
   },
   forecastWeatherIcon: {
-    width: 170,
-    height: 170,
+    width: 80,
+    height: 80,
   },
   forecastDegreeContainer: {
-    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  forecastLocationContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
+    marginBottom: 10,
   },
   forecastDegreeText: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 48,
     color: 'white',
-    fontSize: 75,
     fontWeight: 'bold',
-    marginLeft: 15,
   },
   forecastConditionText: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 18,
     color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 10,
   },
   forecastStatsContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 10,
   },
   forecastStatItem: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: 13,
-    marginLeft: -5,
   },
   forecastStatIcon: {
     width: 50,
-    height:50,
+    height: 50,
   },
   forecastStatText: {
     color: 'white',
-    fontSize: 15,
-    fontWeight: 'bold',
-    marginLeft: 8,
-    marginRight: 2,
   },
-
   forecastDailyContainer: {
-    marginBottom: 20,
+    alignSelf: 'center',
+    marginTop: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 10,
+    padding: 10,
+    width: '95%'
   },
   forecastDailyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 20,
+    marginBottom: 20,
   },
   forecastDailyHeaderText: {
+    marginLeft: 15,
     color: 'white',
-    fontSize: 18,
-    margin: 10,
-  },
-  forecastDailyScrollView: {
-    paddingHorizontal: 15,
+    fontSize: 26,
+    fontWeight:'bold',
   },
   forecastDailyItem: {
-    width: 95,
-    borderRadius: 18,
-    paddingVertical: 20,
-    marginRight: 15,
-    marginTop: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    marginRight: 10,
+    padding: 10,
+    borderRadius: 10,
+    minWidth: 100,
+    backgroundColor: theme.bgWhite(0.2),
+    margin: 10
   },
   forecastDailyIcon: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
+    marginRight: 5,
   },
   forecastDailyDayName: {
     color: 'white',
-    fontSize: 16,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 8,
   },
   forecastDailyTemp: {
     color: 'white',
-    fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 8,
   },
-  errorContainer:{
-    width: 'auto',
-  height:'auto'
-  },
-  errorText:{
-    color:'red'
-  }
 });
 
 export default HomeScreen;

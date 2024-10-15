@@ -1,6 +1,14 @@
 import axios from 'axios';
 import { apiKey } from '../constants';
 
+interface WeatherResponse {
+  location?: object;
+  current?: object;  
+  forecast?: object; 
+  error?: string;    
+}
+
+
 // Base API URL
 const BASE_URL = 'https://api.weatherapi.com/v1';
 
@@ -28,7 +36,7 @@ const generateLocationsUrl = ({ cityName }: { cityName: string; }): string =>
  * @param {string} endpoint - The API endpoint to call.
  * @returns {Promise<Object>} The API response data.
  */
-const apiCall = async (endpoint: string): Promise<object> => {
+const apiCall = async (endpoint: string): Promise<WeatherResponse> => {
   try {
     const { data } = await axios.get(endpoint);
     return data;
@@ -43,7 +51,7 @@ const apiCall = async (endpoint: string): Promise<object> => {
  * @param {Object} params - Parameters for the request.
  * @returns {Promise<Object>} The weather forecast data.
  */
-export const fetchWeatherForecast = async (params: { cityName: any; days: any; }): Promise<object> => {
+export const fetchWeatherForecast = async (params: { cityName: any; days: any; }): Promise<WeatherResponse> => {
   const forecastUrl = generateForecastUrl(params);
   return apiCall(forecastUrl);
 };
@@ -53,7 +61,7 @@ export const fetchWeatherForecast = async (params: { cityName: any; days: any; }
  * @param {Object} params - Parameters for the request.
  * @returns {Promise<Object>} The locations data.
  */
-export const fetchLocations = async (params: { cityName: any; }): Promise<object> => {
+export const fetchLocations = async (params: { cityName: any; }): Promise<WeatherResponse> => {
   const locationsUrl = generateLocationsUrl(params);
   return apiCall(locationsUrl);
 };

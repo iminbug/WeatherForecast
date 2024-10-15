@@ -12,7 +12,6 @@ export const fetchWeatherForecast = (params: { cityName: any; days: any; }) => {
     }
   };
 };
-
 export const fetchLocations = (params: { cityName: any; }) => {
   return async (dispatch: (arg0: { type: string; error?: any; payload?: object; }) => void) => {
     dispatch({ type: 'FETCH_LOCATIONS_REQUEST' });

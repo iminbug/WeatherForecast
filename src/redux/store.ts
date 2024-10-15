@@ -1,6 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
 import weatherReducer from './reducer/weatherReducer'; 
-// import { thunk } from 'redux-thunk';
 
 const store = configureStore({
   reducer: {
@@ -8,10 +7,11 @@ const store = configureStore({
   },
   middleware: (getDefaultMiddleware) => 
     getDefaultMiddleware({
-      serializableCheck: false, // Disable the serializable state invariant check
+      immutableCheck: false,
+      serializableCheck: false, 
     }),
 });
 
-// export type AppDispatch = typeof store.dispatch;
-// export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+export type RootState = ReturnType<typeof store.getState>;
 export default store;

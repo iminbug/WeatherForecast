@@ -7,6 +7,8 @@ import HomeScreen from './src/screens/HomeScreen';
 import WeatherDetailScreen from './src/screens/DetailsScreen';
 import SplashScreen from 'react-native-splash-screen';
 
+
+
 const Stack = createNativeStackNavigator();
 
 const App = () => {
@@ -19,7 +21,15 @@ const App = () => {
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Home" screenOptions={{headerShown:false}}>
           <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="WeatherDetail" component={WeatherDetailScreen} />
+          <Stack.Screen 
+            name="WeatherDetail" 
+            component={WeatherDetailScreen} 
+            options={{
+              headerShown: true, 
+              headerTitle: '',    
+              headerTransparent: true, 
+            }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

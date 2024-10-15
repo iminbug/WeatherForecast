@@ -5,23 +5,30 @@ import { View, Text, Image, StyleSheet, ImageBackground, TouchableOpacity } from
 
 import { weatherImages } from '../constants';
 
-const WeatherDetailScreen = ({ route, navigation }) => {
+const WeatherDetailScreen = ({ route, navigation }:any) => {
   const { forecastItem } = route.params;
 
   return (
     <ImageBackground
-      source={require('../assets/images/bg1.png')} 
+      source={require('../assets/images/bg1.png')}
       style={styles.background}
     >
       <LinearGradient colors={['rgba(0, 0, 0, 0.3)', 'transparent']} style={styles.gradientOverlay} />
       <View style={styles.container}>
-        <Text style={styles.dayName}>{forecastItem.date.toString()}</Text>
+        <Text style={styles.dayName}>
+          {new Date(forecastItem.date).toLocaleDateString('en-US', {
+            weekday: 'short', 
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+        </Text>
         <Image
           source={weatherImages[forecastItem.day.condition.text || 'other']}
           style={styles.weatherIcon}
         />
 
-       
+
         <View style={styles.box}>
           <Text style={styles.tempText}>
             Avg Temp: {forecastItem.day.avgtemp_c}&#176;
@@ -35,56 +42,53 @@ const WeatherDetailScreen = ({ route, navigation }) => {
           </Text>
         </View>
 
-        {/* Stats Box */}
+
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Humidity</Text>
             <LottieView
-              source={require('../assets/animations/humidity.json')} 
+              source={require('../assets/animations/humidity.json')}
               autoPlay
               loop
-              speed={0.5}  
-              style={styles.statImage} 
+              speed={0.5}
+              style={styles.statImage}
             />
             <Text style={styles.statValue}>{forecastItem.day.avghumidity}%</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Wind</Text>
             <LottieView
-              source={require('../assets/animations/wind.json')} 
+              source={require('../assets/animations/wind.json')}
               autoPlay
-              speed={0.5}  
+              speed={0.5}
               loop
-              style={styles.statImage} 
+              style={styles.statImage}
             />
             <Text style={styles.statValue}>{forecastItem.day.maxwind_kph} km/h</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Sunrise</Text>
             <LottieView
-              source={require('../assets/animations/sunrise.json')} 
+              source={require('../assets/animations/sunrise.json')}
               autoPlay
-              speed={0.5}  
+              speed={0.5}
               loop
-              style={styles.statImage} 
+              style={styles.statImage}
             />
             <Text style={styles.statValue}>{forecastItem.astro.sunrise}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Sunset</Text>
             <LottieView
-              source={require('../assets/animations/sunset.json')} 
+              source={require('../assets/animations/sunset.json')}
               autoPlay
-              speed={0.5}  
+              speed={0.5}
               loop
-              style={styles.statImage} 
-             />
+              style={styles.statImage}
+            />
             <Text style={styles.statValue}>{forecastItem.astro.sunset}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>Back</Text>
-        </TouchableOpacity>
       </View>
     </ImageBackground>
   );
@@ -107,15 +111,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 30,
-    width: '90%',
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', 
+    width: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   dayName: {
-    fontSize: 30,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 10,
+    marginTop: 60
   },
   weatherIcon: {
     width: 130,
@@ -124,25 +127,25 @@ const styles = StyleSheet.create({
   },
   tempText: {
     fontSize: 22,
-    color: '#fff', 
+    color: '#fff',
     marginVertical: 5,
     textAlign: 'center'
   },
   conditionText: {
-    fontSize: 30,
-    color: '#fff', 
+    fontSize: 26,
+    color: '#fff',
     marginVertical: 5,
     textAlign: 'center'
   },
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     width: '100%',
-    flexWrap: 'wrap', 
+    flexWrap: 'wrap',
     marginTop: 20,
   },
   box: {
-    padding: 15,
+    padding: 10,
     marginVertical: 5,
     width: '100%',
     borderRadius: 10,
